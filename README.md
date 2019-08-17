@@ -35,7 +35,6 @@ the R scripts.**
 install.packages(c('caret', 'e1071', 'ggplot2', 'ggrepel',
                    'glmnet', 'MASS', 'matrixStats', 'rgl'))
 ```
-
 NOTE: the package **rgl** is only used in generating a 3d plot during
 the explanation of principal components analysis (PCA); feel free to
 remove it from the list of packages if you have trouble with the
@@ -54,11 +53,14 @@ BiocManager::install('genefilter')
 ### from github
 
 The package **sparsediscrim** can be installed from github using the
-following code again run within an R session.
-
+following code again run within an R session
 ```R
+install.packages('devtools') # if devtools not already installed
 devtools::install_github('ramhiser/sparsediscrim')
 ```
+NOTE: **sparsediscrim** contains an implementation of a naive Bayes
+method (DLDA) which we will not have time to discuss in the short
+version of this course but which can be quite useful.
 
 ## Python modules
 
