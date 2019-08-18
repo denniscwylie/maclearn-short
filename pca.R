@@ -112,7 +112,7 @@ ggpca(x30, tissueCoarse, cname='gene',
 ## =============================================================================
 ## PCA plot using all genes
 ggo = ggpca(data.frame(t(x)), tissueCoarse, cname='gene',
-            cshow=FALSE, clab=FALSE, rlab=TRUE, labrepel=TRUE,
+            clab=FALSE, rlab=TRUE, labrepel=TRUE,
             calpha=0.25, ralpha=1,
             colscale=c(gene = 'darkgray',
                        circulatory = 'firebrick3',

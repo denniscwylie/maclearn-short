@@ -38,8 +38,8 @@ tissueCoarse.index = tissue.index
 ## =============================================================================
 ## PCA plot using all genes
 ggpca(x.T, tissueCoarse, cname='gene',
-      cshow=False, rlab=True,
+      rlab=True, clab=False,
       calpha=0.25, ralpha=1,
-      colscale=['firebrick', 'goldenrod', 'lightseagreen',
+      colscale=['firebrick', 'goldenrod', '#B0B0B0', 'lightseagreen',
                 'darkorchid', 'darkslategray', 'dodgerblue'])
 
