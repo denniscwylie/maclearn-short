@@ -72,6 +72,7 @@ def accPlot(accsByNFeats):
                                          'red', 'dodgerblue'])
     ggo += gg.ylab('Accuracy (5-fold CV)')
     print(ggo)
+    return ggd
 
 nFeatures = [2, 5, 10, 20, 50, 100, 200, 500,
              1000, 2000, 5000, 10000]
@@ -97,7 +98,7 @@ for s in accsByNFeats:
             accsByNFeats[s][n] = None
 
 plt.close()
-accPlot(accsByNFeats)
+logAccResults = accPlot(accsByNFeats)
 
 
 ## -----------------------------------------------------------------
@@ -115,7 +116,7 @@ accsByNFeatsL2 = OrderedDict([(s,
                               for s in xnorms])
 
 plt.close()
-accPlot(accsByNFeatsL2)
+l2AccResults = accPlot(accsByNFeatsL2)
 
 
 ## -----------------------------------------------------------------
@@ -133,4 +134,26 @@ accsByNFeatsL1 = OrderedDict([(s,
                               for s in xnorms])
 
 plt.close()
-accPlot(accsByNFeatsL1)
+l1AccResults = accPlot(accsByNFeatsL1)
+
+
+
+## -----------------------------------------------------------------
+logAccResults['regularization'] = '-'
+l1AccResults['regularization'] = 'L1'
+l2AccResults['regularization'] = 'L2'
+allAccResults = pd.concat([logAccResults, l1AccResults, l2AccResults])
+
+plt.close()
+ggo = gg.ggplot(allAccResults, gg.aes(x='p', y='acc',
+                                      color='set',
+                                      linetype='regularization'))
+ggo += gg.facet_wrap('~ set', scales='free_y')
+ggo += gg.geom_line()
+ggo += gg.theme_bw()
+ggo += gg.theme(panel_grid_minor=gg.element_blank(),
+                panel_grid_major=gg.element_blank())
+ggo += gg.scale_x_log10()
+ggo += gg.scale_color_manual(values=['darkgray', 'black',
+                                     'red', 'dodgerblue'])
+print(ggo)
