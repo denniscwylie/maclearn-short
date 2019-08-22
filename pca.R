@@ -61,7 +61,7 @@ textVals = c(rep('', length(colVals)-3), colnames(x3))
 ## use rgl for 3d plotting of data in x3 data.frame:
 open3d()
 plot3d(x3[ , 1], x3[ , 2], x3[ , 3],
-       col=colVals,
+       col=colVals, add=TRUE,
        type='s', box=FALSE, axes=FALSE, radius=0.15,
        xlab='', ylab='', zlab='')
 text3d(x3[ , 1], x3[ , 2], x3[ , 3],
