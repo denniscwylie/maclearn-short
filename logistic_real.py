@@ -123,7 +123,7 @@ l2AccResults = accPlot(accsByNFeatsL2)
 ## L1 regularization
 ## -----------------------------------------------------------------
 def fitL1LogisticWithNFeat(**kwargs):
-    fitter = linear_model.LogisticRegression(penalty="l1", C=1)
+    fitter = linear_model.LogisticRegression(penalty="l1", C=1, solver="saga")
     return fitModelWithNFeat(fitter=fitter, **kwargs)
 
 accsByNFeatsL1 = OrderedDict([(s,
