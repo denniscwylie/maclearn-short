@@ -64,23 +64,6 @@ PValueSelector = function(f=NULL, threshold=0.05, fdr="fdr",
     return(learner)
 }
 
-Multiselector = function(...) {
-    subLearners = list(...)
-    learner = function(x, y, ...) {
-        subLearned = lapply(X=subLearners,
-                FUN=function(f) {f(x, y, ...)})
-        selectedFeatures = Reduce(f=union, x=lapply(
-                X=subLearned, FUN=function(z) {z$selectedFeatures}))
-        return(list(
-            selectedFeatures = selectedFeatures,
-            transform = function(x, ...) {
-                x[ , selectedFeatures, drop=FALSE]
-            },
-            components = subLearned
-        ))
-    }
-}
-
 ModelFitter = function(f,
         predictor=predict, predictionProcessor=identity) {
     predictor = predictor
@@ -211,6 +194,7 @@ caretize = function(fitpipe, lev=NULL, threshold=0.5, ...,
     ))
 }
 
+
 train.ModelFitter = function(
         fitpipe,
         x,
@@ -237,7 +221,6 @@ train.ModelFitter = function(
         parameters = parameters,
         grid = grid
     )
-## browser()
     return(train(
         x = x,
         y = y,
@@ -247,28 +230,6 @@ train.ModelFitter = function(
         ...
     ))
 }
-
-## caretTrain = function(
-##         fitpipe,
-##         x,
-##         y,
-##         threshold = 0.5,
-##         ...,
-##         method = "repeatedcv",
-##         number = 10,
-##         repeats = 1,
-##         trControl = trainControl(method, number, repeats),
-##         tuneGrid = data.frame(ignored=0)) {
-##     caretizedPipe = caretize(fitpipe, lev=levels(y), threshold=threshold)
-##     return(train(
-##         x = x,
-##         y = y,
-##         method = caretizedPipe,
-##         trControl = trControl,
-##         tuneGrid = tuneGrid,
-##         ...
-##     ))
-## }
 
 
 FastTSelector = function(threshold=0.05, fdr="fdr", nFeat=NULL) {
@@ -284,85 +245,6 @@ FastTSelector = function(threshold=0.05, fdr="fdr", nFeat=NULL) {
     )
     class(selector) = c("FastTSelector", class(selector))
     return(selector)
-}
-
-
-PearsonSelector = function(nFeat, type="abs") {
-    nFeat = nFeat
-    type = type
-    selector = function(x, y, ...) {
-        x = scale(x)
-        y = as.numeric(scale(as.numeric(y)))
-        xycors = as.vector(y %*% x) / (length(y)-1)
-        names(xycors) = colnames(x)
-        xycors = get(type)(xycors)
-        selectedFeatures = head(
-            names(sort(xycors, decreasing=TRUE)),
-            n = nFeat
-        )
-        return(list(
-            selectedFeatures = selectedFeatures,
-            transform = function(x, ...) {
-                x[ , selectedFeatures, drop=FALSE]
-            }
-        ))
-    }
-    class(selector) = c("PearsonSelector", "ModelPipe", class(selector))
-    return(selector)
-}
-
-
-PcaExtractor = function(k,
-                        center=c("col", "row", "both", "none"),
-                        scale=c("none", "column", "row")) {
-    k = k
-    center = match.arg(center)
-    scale = match.arg(scale)
-    learner = function(x, ...) {
-        colAvStore = NA
-        colSdStore = NA
-        if (center %in% c("row", "both")) {
-            x = sweep(x, 1, STATS=rowMeans(x))
-        }
-        if (center %in% c("column", "both")) {
-            colAvStore = colMeans(x)
-            x = sweep(x, 2, STATS=colAvStore)
-        }
-        if (scale == "row") {
-            x = sweep(x, 1, STATS=rowSds(x), FUN=`/`)
-        } else if (scale == "column") {
-            colSdStore = colSds(x)
-            x = sweep(x, 2, STATS=colSdStore, FUN=`/`)
-        }
-        xsvd = svd(x)
-        v = xsvd$v[ , order(xsvd$d, decreasing=TRUE)]
-        v = v[ , 1:k, drop=FALSE]
-        rownames(v) = colnames(x)
-        return(list(
-            k = k,
-            center = center,
-            scale = scale,
-            v = v,
-            colAvStore = colAvStore,
-            colSdStore = colSdStore,
-            transform = function(x, ...) {
-                if (center %in% c("row", "both")) {
-                    x = sweep(x, 1, STATS=rowMeans(x))
-                }
-                if (center %in% c("column", "both")) {
-                    x = sweep(x, 2, STATS=colAvStore)
-                }
-                if (scale == "row") {
-                    x = sweep(x, 1, STATS=rowSds(x), FUN=`/`)
-                } else if (scale == "column") {
-                    x = sweep(x, 2, STATS=colSdStore, FUN=`/`)
-                }
-                return(data.frame(as.matrix(x) %*% v, check.names=FALSE))
-            }
-        ))
-    }
-    class(learner) = c("PcaExtractor", "ModelPipe", class(learner))
-    return(learner)
 }
 
 
@@ -384,65 +266,6 @@ KnnFitter = function(k=5) {
         }
     )
     class(out) = c("KnnFitter", class(out))
-    return(out)
-}
-
-
-dldaFitter = ModelFitter(
-    f = function(x, y, ...) {
-        require(sparsediscrim)
-        return(dlda(x, y, prior=c(0.5, 0.5)))
-    },
-    predictionProcessor = function(discriminants) {
-        exponentiatedDiscriminants = exp(sweep(
-            x = -discriminants$scores,
-            MARGIN = 2,
-            STATS = apply(-discriminants$scores, 2, max),
-            FUN = `-`
-        ))
-        probs = sweep(
-            x = exponentiatedDiscriminants,
-            MARGIN = 2,
-            STATS = colSums(exponentiatedDiscriminants),
-            FUN = `/`
-        )
-        return(probs[2, ])
-    }
-)
-
-
-LdaFitter = function(...) {
-    ldaArgs = list(...)
-    out = ModelFitter(
-        f = function(x, y, ...) {
-            require(MASS)
-            do.call(lda, c(list(x, y), ldaArgs))
-        },
-        predictor = function(obj, x, ...) {
-            predictions = predict(obj, x, ...)$posterior[ , 2]
-            names(predictions) = rownames(x)
-            return(predictions)
-        }
-    )
-    class(out) = c("LdaFitter", class(out))
-    return(out)
-}
-
-
-QdaFitter = function(...) {
-    qdaArgs = list(...)
-    out = ModelFitter(
-        f = function(x, y, ...) {
-            require(MASS)
-            do.call(qda, c(list(x=x, y=y), qdaArgs))
-        },
-        predictor = function(obj, x, ...) {
-            predictions = predict(obj, x, ...)$posterior[ , 2]
-            names(predictions) = rownames(x)
-            return(predictions)
-        }
-    )
-    class(out) = c("QdaFitter", class(out))
     return(out)
 }
 
@@ -498,43 +321,5 @@ SvmFitter = function(...) {
         }
     )
     class(out) = c("SvmFitter", class(out))
-    return(out)
-}
-
-
-RandomForestFitter = function(...) {
-    rfArgs = list(...)
-    out = ModelFitter(
-        f = function(x, y, ...) {
-            require(randomForest)
-            do.call(randomForest, c(list(x=x, y=y), rfArgs))
-        },
-        predictor = function(obj, x, ...) {
-            ## x = data.frame(x)
-            predictions = predict(obj, x, type="prob")[ , 2]
-            names(predictions) = rownames(x)
-            return(predictions)
-        }
-    )
-    class(out) = c("RandomForestFitter", class(out))
-    return(out)
-}
-
-
-AdaFitter = function(...) {
-    adaArgs = list(...)
-    out = ModelFitter(
-        f = function(x, y, ...) {
-            require(ada)
-            do.call(ada, c(list(x=x, y=y), adaArgs))
-        },
-        predictor = function(obj, x, ...) {
-            x = data.frame(x)
-            predictions = predict(obj, x, type="probs")[ , 2]
-            names(predictions) = rownames(x)
-            return(predictions)
-        }
-    )
-    class(out) = c("AdaFitter", class(out))
     return(out)
 }
