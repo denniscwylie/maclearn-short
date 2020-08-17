@@ -50,18 +50,6 @@ install.packages('BiocManager')
 BiocManager::install('genefilter')
 ```
 
-### from github
-
-The package **sparsediscrim** can be installed from github using the
-following code again run within an R session
-```R
-install.packages('devtools') # if devtools not already installed
-devtools::install_github('ramhiser/sparsediscrim')
-```
-NOTE: **sparsediscrim** contains an implementation of a naive Bayes
-method (DLDA) which we will not have time to discuss in the short
-version of this course but which can be quite useful.
-
 ## Python modules
 
 The following Python modules are used in the included scripts; again I
