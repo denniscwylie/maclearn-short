@@ -26,7 +26,7 @@ annotFiles = {
 annots = {k : readTab(annotFiles[k]) for k in annotFiles}
 
 annots['shen'] = pd.DataFrame({
-    'Tissue' : xs['shen'].index.str.replace(r'\d*(-.*)?', '')
+    'Tissue' : xs['shen'].index.str.replace(r'\d*(-.*)?', '', regex=True)
 }, index = xs['shen'].index)
 annots['shen']['System'] = pd.Series({
     'boneMarrow' : 'lymphatic',

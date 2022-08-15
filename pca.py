@@ -10,7 +10,7 @@ x = pd.read_csv('rnaseq/shen2012/19-tissues-expr.tsv.gz',
 
 ## extract tissue types from colnames of x
 tissue = pd.Series(
-    x.columns.str.replace('\d*(-.*)?', ''),
+    x.columns.str.replace('\d*(-.*)?', '', regex=True),
     index = x.columns
 )
 tissueCoarse = pd.Series({
