@@ -164,8 +164,8 @@ ggpca = function(
         colscale = colscale[classLevels]
     }
     ggobj = ggobj + scale_color_manual(values=colscale, name=lname)
-    ggobj = ggobj + scale_size_continuous(guide=FALSE, range=sizeRange)
-    ggobj = ggobj + scale_alpha_continuous(guide=FALSE, range=alphaRange)
+    ggobj = ggobj + scale_size_continuous(guide="none", range=sizeRange)
+    ggobj = ggobj + scale_alpha_continuous(guide="none", range=alphaRange)
     ggobj = ggobj + xlab(paste0(
         "PC1 (",
         round(100 * xsvd$d[1]^2 / sum(xsvd$d^2), 1),
